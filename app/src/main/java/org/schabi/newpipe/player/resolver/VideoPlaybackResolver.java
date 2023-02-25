@@ -14,6 +14,7 @@ import com.google.android.exoplayer2.source.MergingMediaSource;
 
 import org.schabi.newpipe.extractor.MediaFormat;
 import org.schabi.newpipe.extractor.stream.AudioStream;
+import org.schabi.newpipe.extractor.stream.DeliveryMethod;
 import org.schabi.newpipe.extractor.stream.StreamInfo;
 import org.schabi.newpipe.extractor.stream.SubtitlesStream;
 import org.schabi.newpipe.extractor.stream.VideoStream;
@@ -26,6 +27,7 @@ import org.schabi.newpipe.util.ListHelper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.google.android.exoplayer2.C.TIME_UNSET;
 import static org.schabi.newpipe.util.ListHelper.getUrlAndNonTorrentStreams;
@@ -100,7 +102,11 @@ public class VideoPlaybackResolver implements PlaybackResolver {
         }
 
         // Create optional audio stream source
-        final List<AudioStream> audioStreams = getNonTorrentStreams(info.getAudioStreams());
+        final List<AudioStream> audioStreams = getNonTorrentStreams(info.getAudioStreams())
+                .stream().filter(audioStream ->
+                        !(audioStream.getDeliveryMethod().equals(DeliveryMethod.HLS)
+                                && audioStream.getFormat().equals(MediaFormat.OPUS)))
+                .collect(Collectors.toList());
         final AudioStream audio = audioStreams.isEmpty() ? null : audioStreams.get(
                 ListHelper.getDefaultAudioFormat(context, audioStreams));
 
